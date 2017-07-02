@@ -41,7 +41,7 @@ public class AsynchEventHandler extends AbstractEventHandler
 			{
 				while (this.threadPool[idx] != null && (this.threadPool[idx].getState() != Thread.State.TERMINATED))
 				{
-					idx++;
+					idx = (idx + 1) % this.threadPool.length;
 				}
 				this.threadPool[idx] = new Thread(new EventHandlingRunner(cons, toHandle));
 				this.threadPool[idx].start();

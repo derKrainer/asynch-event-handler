@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Map;
+
 import definitions.EventHandlingResult;
 import definitions.IEvent;
 import definitions.IEventConsumer;
@@ -20,15 +23,18 @@ public class HandleEventTest
 		test.testEventHandler();
 		test.testAsynchEventHandler();
 		test.testAllHandlers();
+		test.testRegisterGlobally();
 	}
 
 	public void testEventHandler()
 	{
 		IEventHandler handler = EventHandlerFactory.getSynchronousEventHandler();
 
+		final IEventConsumer persistentConsumer = new PersistentConsumer("persistent 1");
+		final IEventConsumer persistentConsumer2 = new PersistentConsumer("persistent 2");
 		handler.register(new TestConsumer(), Event.EVENT_NAME);
-		handler.register(new PersistentConsumer("persistent 1"), Event.EVENT_NAME);
-		handler.register(new PersistentConsumer("persistent 2"), Event.EVENT_NAME);
+		handler.register(persistentConsumer, Event.EVENT_NAME);
+		handler.register(persistentConsumer2, Event.EVENT_NAME);
 
 		EventHandlingResult res = EventHandlerFactory.getSynchronousEventHandler().triggerEvent(new Event());
 
@@ -40,6 +46,10 @@ public class HandleEventTest
 		{
 			System.err.println("HandlingResult was not stop");
 		}
+
+		EventHandlerFactory.getSynchronousEventHandler().unregister(persistentConsumer, Event.EVENT_NAME);
+		EventHandlerFactory.getSynchronousEventHandler().unregister(null, Event.EVENT_NAME, "foobar");
+		EventHandlerFactory.getSynchronousEventHandler().unregister(persistentConsumer2, "foobar", "asdf");
 	}
 
 	public void testAsynchEventHandler()
@@ -63,7 +73,25 @@ public class HandleEventTest
 		EventHandlerFactory.getSynchronousEventHandler().register(new PersistentConsumer("synch1"), Event.EVENT_NAME);
 		EventHandlerFactory.getSynchronousEventHandler().register(new PersistentConsumer("synch2"), Event.EVENT_NAME);
 
-		EventHandlerFactory.fireGlobalEvent(new Event());
+		EventHandlerFactory.fireGlobalEvent(new Event(new HashMap<>()));
+	}
+
+	public void testRegisterGlobally()
+	{
+
+		final String evName = "myTestEvent";
+		EventHandlerFactory.registerGlobally(new TestConsumer(), evName);
+		for (int i = 0; i < 10; i++)
+		{
+			EventHandlerFactory.registerGlobally(new PersistentConsumer("pers" + 1), evName);
+		}
+
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("eventName", evName);
+		paramMap.put("dummyParam", this);
+		EventHandlerFactory.fireGlobalEvent(new Event(evName, paramMap));
+		EventHandlerFactory.getAsynchronousEventHandler().triggerEvent(new Event(evName));
+		EventHandlerFactory.getAsynchronousEventHandler().triggerEvent(new Event(evName));
 	}
 }
 
@@ -93,7 +121,16 @@ class PersistentConsumer implements IEventConsumer
 	{
 		for (int i = 0; i < 5; i++)
 		{
-			System.out.println(this.name + " is handling " + event.toString());
+			System.out.print(this.name + " is handling " + event.toString());
+
+			if (event.getParams() != null)
+			{
+				for (String key : event.getParams().keySet())
+				{
+					System.out.print("\n  passedParam: key=" + key + "; value=" + event.getParams().get(key));
+				}
+			}
+			System.out.println();
 			try
 			{
 				Thread.sleep(1000);

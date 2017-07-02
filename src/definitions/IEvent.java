@@ -32,5 +32,5 @@ public interface IEvent {
 	 * 
 	 * @return event parameters
 	 */
-	Map<String, Object> getParams();
+	Map<String, Object> getParams();	
 }

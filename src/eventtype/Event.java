@@ -14,22 +14,31 @@ import log.Logger;
  * 
  * @author Kenny
  */
-public class Event implements IEvent {
+public class Event implements IEvent
+{
 	public static final String EVENT_NAME = "GeneralEvent";
 
 	protected final long createdTimestamp;
 	protected final Map<String, Object> params;
 	protected final String eventName;
 
-	public Event() {
+	public Event()
+	{
 		this(EVENT_NAME, new HashMap<>());
 	}
 
-	public Event(Map<String, Object> parameters) {
+	public Event(String eventName)
+	{
+		this(eventName, new HashMap<>());
+	}
+
+	public Event(Map<String, Object> parameters)
+	{
 		this(EVENT_NAME, parameters);
 	}
 
-	public Event(String eventName, Map<String, Object> parameters) {
+	public Event(String eventName, Map<String, Object> parameters)
+	{
 		super();
 
 		this.eventName = eventName == null ? eventName : EVENT_NAME;
@@ -38,22 +47,26 @@ public class Event implements IEvent {
 	}
 
 	@Override
-	public String getEventName() {
+	public String getEventName()
+	{
 		return EVENT_NAME;
 	}
 
 	@Override
-	public long getTimeStamp() {
+	public long getTimeStamp()
+	{
 		return this.createdTimestamp;
 	}
 
 	@Override
-	public String toString() {
+	public String toString()
+	{
 		return Logger.concat("TimeStamp: ", Long.toString(this.getTimeStamp()), "; EventName: ", this.getEventName());
 	}
 
 	@Override
-	public Map<String, Object> getParams() {
+	public Map<String, Object> getParams()
+	{
 		return this.params;
 	}
 }
